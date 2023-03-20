@@ -12,17 +12,16 @@ namespace FileTransferService.Functions
 {
     public class ScanUploadedFile
     {
-
-        private string processScanResultsUri = @"https://prod-25.usgovvirginia.logic.azure.us:443/workflows/5b51f4a19d2343e1b97a41fc3ea2f5a9/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vwRvdmwmXdMZRQSI5tjmYivu3A5kBlkFx37F5UI4sQw";
         private HttpClient httpClient = new HttpClient();
 
         [FunctionName("ScanUploadedFile")]
-        public async Task Run([BlobTrigger("new-files/{name}", Connection = "ftsdevuploadst_STORAGE")]Stream myBlob, string name, ILogger log)
+        public async Task Run([BlobTrigger("new-files/{name}", Connection = "uploadstorage_conn")]Stream myBlob, string name, ILogger log)
         {
             log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: {myBlob.Length} Bytes");
 
             var scannerHost = Environment.GetEnvironmentVariable("windowsdefender_host");
             var scannerPort = Environment.GetEnvironmentVariable("windowsdefender_port");
+            var scanresultprocessorUri = Environment.GetEnvironmentVariable("scanresultprocessor_uri");
 
             log.LogInformation($"Scanner Host: {scannerHost} and Scanner Port: {scannerPort}");
 
@@ -51,7 +50,7 @@ namespace FileTransferService.Functions
 
             StringContent payload = new StringContent(jsonFileInfo, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage response = await httpClient.PostAsync(processScanResultsUri, payload);
+            HttpResponseMessage response = await httpClient.PostAsync(scanresultprocessorUri, payload);
             Stream responseStream = response.Content.ReadAsStream();
             StreamReader responseStreamReader = new StreamReader(responseStream, Encoding.UTF8);
 
