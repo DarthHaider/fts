@@ -14,32 +14,42 @@ namespace FileTransferService.Web.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly AzureStorageConfiguration _configuration;
+        private readonly AzureStorageConfiguration _azureStorageConfiguration;
+        private readonly UploadConfiguration _uploadConfiguration;
 
-        public HomeController(IOptions<AzureStorageConfiguration> configuration, ILogger<HomeController> logger)
+
+        public HomeController(IOptions<AzureStorageConfiguration> azureStorageConfiguration,
+                              IOptions<UploadConfiguration> uploadConfiguration,
+                              ILogger<HomeController> logger)
         {
-            _configuration = configuration.Value;
+            _azureStorageConfiguration = azureStorageConfiguration.Value;
+            _uploadConfiguration = uploadConfiguration.Value;
             _logger = logger;
         }
 
         public IActionResult Index()
         {
-            return View();
+            IndexViewModel indexViewModel = new IndexViewModel 
+                                                { 
+                                                    MaxBufferedFileSize = _uploadConfiguration.MaxBufferedFileSize,
+                                                    DestinationStorageAccount = _azureStorageConfiguration.DestinationStorageAccount
+                                                };
+            return View(indexViewModel);
         }
 
         [HttpPost]
-        [RequestFormLimits(MultipartBodyLengthLimit = 134217728)]
+        [RequestFormLimits(MultipartBodyLengthLimit = (1024 * 1024 *100))]
         public async Task<IActionResult> Upload(IFormFile uploadFile)
         {
             string fileName = uploadFile.FileName;
             string baseStoragePath = "blob.core.usgovcloudapi.net";
-            string accountName = _configuration.AccountName;
-            string uploadContainer = _configuration.UploadContainer;
+            string accountName = _azureStorageConfiguration.AccountName;
+            string uploadContainer = _azureStorageConfiguration.UploadContainer;
             string path = $"https://{accountName}.{baseStoragePath}/{uploadContainer}/{fileName}";
 
             Uri blobUri = new Uri(path);
 
-            StorageSharedKeyCredential credential = new StorageSharedKeyCredential(_configuration.AccountName, _configuration.AccountKey);
+            StorageSharedKeyCredential credential = new StorageSharedKeyCredential(_azureStorageConfiguration.AccountName, _azureStorageConfiguration.AccountKey);
 
             BlobClient client = new BlobClient(blobUri, credential);
 
@@ -56,6 +66,11 @@ namespace FileTransferService.Web.Controllers
             return uploadSuccessFul ? Ok() : BadRequest();
         }
 
+        public IActionResult FAQ()
+        {
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();
@@ -67,5 +82,6 @@ namespace FileTransferService.Web.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
     }
 }

@@ -1,5 +1,7 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model FileTransferService.Web.Models.IndexViewModel
+
+@{
+    ViewData["Title"] = "File Transfer Service (FTS)";
 }
 
 <div class="toast-bar">
@@ -13,12 +15,17 @@
             Upload failed.
         </div>
     </div>
+    <div id="exceeds-max-file-size-toast" class="toast toast-bar-item" role="alert">
+        <div class="toast-body alert-danger">
+            File exceeds the maximum size of 100 MB
+        </div>
+    </div>
 </div>
 <div class="mt-2 ps-5 pe-5">
     <form asp-controller="Home" asp-action="Upload" method="post" enctype="multipart/form-data" onsubmit="upload(this); return false;">
         <div class="mb-3">
-            <label class="mb-1 text-secondary" for="uploadFileInput" id="uploadFileLabel">Select a file to upload:</label>
-            <input class="form-control" name="uploadFile" id="uploadFileInput" type="file" />
+            <label class="mb-1 text-secondary" for="uploadFileInput" id="uploadFileLabel">Select a file to upload <span style="color: crimson;">(Max size 100MB)</span>:</label>
+            <input class="form-control" name="uploadFile" id="uploadFileInput" type="file" readonly />
         </div>
         <div class="mb-3 text-secondary">
             <span>Note: Ensure ingress files do not have file names containing CUI information.</span>
@@ -27,6 +34,29 @@
             <button class="btn btn-primary" id="uploadFileSubmitButton" type="submit" disabled></button>
         </div>
     </form>
+    <div class="d-flex justify-content-around mt-5">
+        <div class="card" style="width: 18em; min-height: 16em;">
+            <div class="card-header">Frequently Asked Questions</div>
+            <div class="card-body">
+                <p class="card-text text-secondary">Have questions about the File Transfer Service? Please visit our FAQ by clicking the link below.</p>
+                <a class="card-link" asp-area="" asp-controller="Home" asp-action="FAQ">Go to FAQ</a>
+            </div>
+        </div>
+        <div class="card" style="width: 18em; min-height: 16em;">
+            <div class="card-header">User's Guide</div>
+            <div class="card-body">
+                <p class="card-text text-secondary">Want detailed guidance on the use of the File Transfer Service? Please download the "User's Guide'" by clicking the link below.</p>
+                <a href="./Downloads/User Guide.pdf" download class="card-link">Download User's Guide</a>
+            </div>
+        </div>
+        <div class="card" style="width: 18em; min-height: 16em;">
+            <div class="card-header">Report an Issue</div>
+            <div class="card-body">
+                <p class="card-text text-secondary">Did you run in to an issue? Please the TC support channel using the "@@tchelp" tag.</p>
+                <a href="https://chat.il4.dso.mil/usaf-76-sweg/channels/tcsupport" class="card-link">Email support</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -48,7 +78,17 @@
             $('.toast').toast({delay: 2000});
 
             uploadFileInput.addEventListener("input", event => {
-                formSubmitButton.disabled = !(event.target.value.length > 0);
+
+                let exceedsMaxBufferedFileSize = event.target.files[0].size > @Model.MaxBufferedFileSize;
+                let isValid = event.target.value.length > 0;
+                isValid = isValid == true ? exceedsMaxBufferedFileSize : isValid;
+
+                formSubmitButton.disabled = isValid;
+
+                if (exceedsMaxBufferedFileSize) {
+                    $("#exceeds-max-file-size-toast").toast("show");
+                }
+
             });
 
             formSubmitButtonTextSpan.textContent = "Upload";
