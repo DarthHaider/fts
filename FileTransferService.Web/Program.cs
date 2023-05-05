@@ -13,8 +13,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<AzureStorageConfiguration>(builder.Configuration.GetSection("AzureStorageConfiguration"));
 builder.Services.Configure<UploadConfiguration>(builder.Configuration.GetSection("UploadConfiguration"));
 
-builder.Services.Configure<FormOptions>(options => 
-    options.MultipartBodyLengthLimit = builder.Configuration.GetSection("UploadConfiguration").GetValue<long>("MaxBufferedFileSize"));
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = builder.Configuration.GetSection("UploadConfiguration").GetValue<long>("MaxBufferedFileSize");
+    Console.WriteLine(options.MultipartBodyLengthLimit);
+});
 
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));

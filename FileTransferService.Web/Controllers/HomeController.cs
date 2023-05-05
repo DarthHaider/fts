@@ -38,7 +38,7 @@ namespace FileTransferService.Web.Controllers
         }
 
         [HttpPost]
-        [RequestFormLimits(MultipartBodyLengthLimit = (1024 * 1024 *100))]
+        [RequestFormLimits(MultipartBodyLengthLimit = 104857600)]
         public async Task<IActionResult> Upload(IFormFile uploadFile)
         {
             string fileName = uploadFile.FileName;
