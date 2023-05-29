@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33530.505
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileTransferSolution.Workbench.Console", "FileTransferSolution.Workbench.Console.csproj", "{2DECF517-9104-47D3-96E9-B2C22C01897F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileTransferService.Workbench.Spa", "FileTransferService.Workbench.Spa.csproj", "{8F460A23-7B73-413D-93FF-E66C64A14C91}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2DECF517-9104-47D3-96E9-B2C22C01897F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2DECF517-9104-47D3-96E9-B2C22C01897F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2DECF517-9104-47D3-96E9-B2C22C01897F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2DECF517-9104-47D3-96E9-B2C22C01897F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F460A23-7B73-413D-93FF-E66C64A14C91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F460A23-7B73-413D-93FF-E66C64A14C91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F460A23-7B73-413D-93FF-E66C64A14C91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F460A23-7B73-413D-93FF-E66C64A14C91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {5D3E5A02-2219-4DDA-B57A-8A940F2510A1}
+		SolutionGuid = {1BDB5521-C09A-448F-BCF0-01A5F86BE542}
 	EndGlobalSection
 EndGlobal

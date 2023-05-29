@@ -26,7 +26,9 @@ namespace FileTransferService.Functions
             log.LogInformation($"Scanner Host: {scannerHost} and Scanner Port: {scannerPort}");
 
             ScannerProxy scanner = new ScannerProxy(log, scannerHost);
-            ScanResults scanResults = scanner.Scan(myBlob, name);
+            
+            //ScanResults scanResults = scanner.Scan(myBlob, name);
+            ScanResults scanResults = scanner.Scan(name, "new-files");
 
             if(scanResults == null) 
             {

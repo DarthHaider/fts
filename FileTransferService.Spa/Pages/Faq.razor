@@ -1,0 +1,64 @@
+﻿@page "/faq"
+@attribute [Authorize]
+
+<PageTitle>Frequently Asked Questions (FAQ)</PageTitle>
+
+<div class="mt-2 ps-5 pe-5">
+    <h1 class="text-secondary">Frequently Asked Question (FAQ)</h1>
+    <table class="table table-striped mt-5 ms-3 me-3">
+        <tr>
+            <td style="width: 3em; text-align: center;">Q:</td>
+            <td>What is the maximum file size that can be uploaded?</td>
+        </tr>
+        <tr>
+            <td style="width: 3em; text-align: center;">A:</td>
+            <td>The current maximum files size is 100 MB.</td>
+        </tr>
+
+        <tr>
+            <td style="width: 3em; text-align: center;">Q:</td>
+            <td>What if I upload a file with the same name as an existing file?</td>
+        </tr>
+        <tr>
+            <td style="width: 3em; text-align: center;">A:</td>
+            <td>The old file will be overwritten by the newly uploaded file.</td>
+        </tr>
+
+        <tr>
+            <td style="width: 3em; text-align: center;">Q:</td>
+            <td>Will future versions support larger file sizes?</td>
+        </tr>
+        <tr>
+            <td style="width: 3em; text-align: center;">A:</td>
+            <td>Yes, the plan is to support up to 1 TB in the future.</td>
+        </tr>
+        <tr>
+            <td style="width: 3em; text-align: center;">Q:</td>
+            <td>How long should it take for my file to be processed, scanned, and uploaded into IL5 storage?</td>
+        </tr>
+        <tr>
+            <td style="width: 3em; text-align: center;">A:</td>
+            <td>At the current file size maximum (100 MB) the process should no longer than approximately 10 minutes.</td>
+        </tr>
+        <tr>
+            <td style="width: 3em; text-align: center;">Q:</td>
+            <td>Where will the file ultimately be uploaded after it is processed?</td>
+        </tr>
+        <tr>
+            <td style="width: 3em; text-align: center;">A:</td>
+            <td>In the “default” container of the IL5 storage account “mc2il5genfilerecstg01”. Customers may contact their sysadmin on the support channel to request uploaded file retrieval.</td>
+        </tr>
+
+
+        <tr>
+            <td style="width: 3em; text-align: center;">Q:</td>
+            <td>What should I do if I encounter an issue?</td>
+        </tr>
+        <tr>
+            <td style="width: 3em; text-align: center;">A:</td>
+            <td>You can use the link in the main page of the File Transfer Service under the “Report an Issue” card, which will navigate you to the TC support channel. Please use the “@@tchelp” tag  when logging your issue.</td>
+        </tr>
+    </table>
+</div>
+
+

@@ -11,6 +11,9 @@ if($args.Count -gt 0){
         New-Item $ScanHttpServerFolder\vminit.config
     }
     Set-Content $ScanHttpServerFolder\vminit.config $args[0]
+
+    New-Item -Path Env:\FtsStorageAccountName -Value $args[1]
+    New-Item -Path Env:\FtsStorageAccountKey -Value $args[2]
 }
 
 $ScanHttpServerBinZipUrl = Get-Content $ScanHttpServerFolder\vminit.config

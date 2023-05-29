@@ -30,12 +30,14 @@ namespace FileTransferService.Functions
             client = new HttpClient(handler);
         }
 
-        public ScanResults Scan(Stream blob, string blobName)
+        //public ScanResults Scan(Stream blob, string blobName)
+        public ScanResults Scan(string blobName, string containerName)
         {
             string url = "https://" + hostIp + "/scan";
             log.LogInformation($"Scanner URL: {url}");
 
-            var form = CreateMultiPartForm(blob, blobName);
+            //var form = CreateMultiPartForm(blob, blobName);
+            var form = CreateMultiPartForm(blobName, containerName);
             var response = client.PostAsync(url, form).Result;
             string stringContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
@@ -58,14 +60,24 @@ namespace FileTransferService.Functions
             return scanResults;
         }
 
-        private static MultipartFormDataContent CreateMultiPartForm(Stream blob, string blobName)
+        //private static MultipartFormDataContent CreateMultiPartForm(Stream blob, string blobName)
+        private static MultipartFormDataContent CreateMultiPartForm(string blobName, string containerName)
         {
             string boundry = GenerateRandomBoundry();
             MultipartFormDataContent form = new MultipartFormDataContent(boundry);
-            var streamContent = new StreamContent(blob);
-            var blobContent = new ByteArrayContent(streamContent.ReadAsByteArrayAsync().Result);
-            blobContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
-            form.Add(blobContent, "malware", blobName);
+            
+            // var streamContent = new StreamContent(blob);
+            // var blobContent = new ByteArrayContent(streamContent.ReadAsByteArrayAsync().Result);
+            var blobNameContent = new StringContent(blobName);
+            var containerNameContent = new StringContent(containerName);
+
+            // blobContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+            blobNameContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+            containerNameContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+
+            //form.Add(blobContent, "malware", blobName);
+            form.Add(blobNameContent, "blobName");
+            form.Add(containerNameContent, "containerName");            
             return form;
         }
 

@@ -1,0 +1,145 @@
+﻿@page "/"
+@attribute [Authorize]
+
+@inject Microsoft.Extensions.Configuration.IConfiguration configuration;
+@using Azure
+@using Azure.Storage
+@using Azure.Storage.Blobs
+@using Azure.Storage.Blobs.Models
+
+<PageTitle>File Transfer Service (FTS)</PageTitle>
+
+
+<div class="mt-2 ps-5 pe-5">
+
+    <div class="mb-3">
+        <label class="mb-1 text-secondary" for="uploadFileInput" id="uploadFileLabel">Select a file to upload <span style="color: crimson;">(Max size 1TB)</span>:</label>
+        <InputFile class="form-control" @key="@(uploadFileInputKey)" id="uploadFileInput" OnChange="@OnFileSelectionChange"></InputFile>
+    </div>
+    <div class="mb-3 text-secondary">
+        <span>Note: Ensure ingress files do not have file names containing CUI information.</span>
+    </div>
+    <div style="text-align:end">
+        <button class="btn btn-primary" id="uploadFileSubmitButton" type="submit" @onclick="@Upload" disabled="@(!isValid)">Upload</button>
+    </div>
+
+    <div class="d-flex justify-content-around mt-5">
+        <div class="card" style="width: 18em; min-height: 16em;">
+            <div class="card-header">Frequently Asked Questions</div>
+            <div class="card-body">
+                <p class="card-text text-secondary">Have questions about the File Transfer Service? Please visit our FAQ by clicking the link below.</p>
+                <NavLink class="nav-link card-link" href="faq">FAQ</NavLink>
+            </div>
+        </div>
+        <div class="card" style="width: 18em; min-height: 16em;">
+            <div class="card-header">User's Guide</div>
+            <div class="card-body">
+                <p class="card-text text-secondary">Want detailed guidance on the use of the File Transfer Service? Please download the "User's Guide'" by clicking the link below.</p>
+                <a href="./Downloads/User Guide.pdf" download class="card-link">Download User's Guide</a>
+            </div>
+        </div>
+        <div class="card" style="width: 18em; min-height: 16em;">
+            <div class="card-header">Report an Issue</div>
+            <div class="card-body">
+                <p class="card-text text-secondary">Did you run in to an issue? Please the TC support channel using the "@@tchelp" tag.</p>
+                <a href="https://chat.il4.dso.mil/usaf-76-sweg/channels/tcsupport" class="card-link">Message support</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private long maxFileSize = 1099511627776;
+    private bool exceedsMaxFileSize = false;
+
+    private bool isValid = false;
+
+    private IBrowserFile? currentFile;
+    public Guid uploadFileInputKey;
+
+    private string statusMessage = String.Empty;
+    private bool showProgressBar = false;
+    private string progressBar = String.Empty;
+
+    private void OnFileSelectionChange(InputFileChangeEventArgs e)
+    {
+        Console.WriteLine("File selected", e.File.Name);
+        isValid = Validate(e.File);
+        if (isValid)
+        {
+            currentFile = e.File;
+        }
+    }
+
+    private async Task Upload()
+    {
+        try
+        {
+            string baseStoragePath = "blob.core.usgovcloudapi.net";
+            var accountName = configuration.GetSection("AzureStorageConfiguration")["AccountName"];
+            var uploadContainer = configuration.GetSection("AzureStorageConfiguration")["UploadContainer"];
+            var sasToken = configuration.GetSection("AzureStorageConfiguration")["SasToken"];
+
+            if (accountName != null 
+                && uploadContainer != null 
+                && currentFile != null
+                && sasToken != null)
+            {
+                string path = $"https://{accountName}.{baseStoragePath}/{uploadContainer}/{currentFile.Name}";
+                var azureBlobUri = new Uri(path);
+
+                AzureSasCredential sasCredentials = new AzureSasCredential(sasToken);
+                BlobClient blobClient = new BlobClient(azureBlobUri, sasCredentials, new BlobClientOptions());
+
+                BlobUploadOptions blobUploadOptions = new BlobUploadOptions
+                {
+                    HttpHeaders = new BlobHttpHeaders
+                    {
+                        ContentType =
+                                    currentFile.ContentType
+                    },
+                    TransferOptions = new StorageTransferOptions
+                    {
+                        InitialTransferSize = 1024 * 1024,
+                        MaximumConcurrency = 20,
+                        MaximumTransferSize = 1024 * 1024
+                    }
+                };
+
+                await blobClient.UploadAsync(currentFile.OpenReadStream(maxFileSize), blobUploadOptions);
+                Reset();
+
+            }
+
+
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private bool Validate(IBrowserFile file)
+    {
+        if(file != null)
+        {
+            exceedsMaxFileSize = !(file.Size < maxFileSize);
+            if (!exceedsMaxFileSize)
+            {
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
+    private void Reset()
+    {
+        uploadFileInputKey = Guid.NewGuid();
+        currentFile = null;
+        exceedsMaxFileSize = false;
+        isValid = false;
+    }
+
+}

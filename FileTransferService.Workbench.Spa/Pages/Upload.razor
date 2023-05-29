@@ -1,0 +1,97 @@
+﻿@page "/upload"
+
+@inject Microsoft.Extensions.Configuration.IConfiguration configuration;
+@using System.ComponentModel.DataAnnotations
+@using System.IO
+@using System.Linq
+@using System.Threading
+@using Azure
+@using Azure.Core.Pipeline
+@using Azure.Storage
+@using Azure.Storage.Blobs
+@using Azure.Storage.Blobs.Models
+
+<h3>Azure Blob Upload File</h3>
+
+<div class="container">
+    <label>Select the File to be uploaded:</label>
+    <InputFile id="browseFile" OnChange="@OnFileSelectionChange"></InputFile>
+    <hr />
+
+    <div class="progress">
+        <div class="progress-bar bg-info" role="progressbar" aria-valuenow="@progressBar"
+             aria-valuemin="0" aria-valuemax="100"
+             style="@($"width: { progressBar }%")">
+            <span class="sr-only">@progressBar</span>
+        </div>
+    </div>
+    <hr />
+    <div class="container">
+        <strong>
+            @statusMessage
+        </strong>
+    </div>
+
+</div>
+@code {
+    private int maxFileSize = 1024 * 1024 * 20;
+    private string statusMessage = String.Empty;
+    private bool showProgressBar = false;
+    private string progressBar = String.Empty;
+
+    private async Task OnFileSelectionChange(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            statusMessage = String.Empty;
+
+            var selectedFile = e.File;
+
+            string baseStoragePath = "blob.core.usgovcloudapi.net";
+            string accountName = configuration.GetSection("AzureStorageConfiguration")["AccountName"].ToString();
+            string uploadContainer = configuration.GetSection("AzureStorageConfiguration")["UploadContainer"].ToString();
+            string path = $"https://{accountName}.{baseStoragePath}/{uploadContainer}/{selectedFile.Name}";
+
+            var azureBlobUri = new Uri(path);
+
+            AzureSasCredential sasCredentials = new AzureSasCredential("?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupitfx&se=2024-05-26T23:29:55Z&st=2023-05-26T15:29:55Z&spr=https&sig=0fP1ImSFp2fBOTblwBd2znncsAZDiaZEPZ%2BPYk2O5S0%3D");
+
+            BlobClient blobClient = new BlobClient(azureBlobUri, sasCredentials, new BlobClientOptions());
+
+
+            var res = await blobClient.UploadAsync(selectedFile.OpenReadStream(maxFileSize),
+            new BlobUploadOptions
+                {
+
+                    HttpHeaders = new BlobHttpHeaders
+                    {
+                        ContentType =
+                             selectedFile.ContentType
+                    },
+
+                    TransferOptions = new StorageTransferOptions
+                    {
+                        InitialTransferSize = 1024 * 1024
+                    },
+
+                    Conditions = new BlobRequestConditions { },
+
+                    ProgressHandler = new Progress<long>((progress) =>
+                        {
+                            progressBar = (100.0 * progress / selectedFile.Size).ToString("0");
+
+                        })
+
+                });
+            statusMessage = "File Uploaded Successfully......";
+        }
+        catch (Exception ex)
+        {
+            statusMessage = ex.Message;
+        }
+
+
+    }
+
+}
+

@@ -55,9 +55,15 @@ namespace ScanHttpServer
 
             var scanner = new WindowsDefenderScanner();
             var parser = MultipartFormDataParser.Parse(request.InputStream);
-            var file = parser.Files.First();
-            Log.Information("filename: {fileName}", file.FileName);
-            string tempFileName = FileUtilities.SaveToTempFile(file.Data);
+            //var file = parser.Files.First();
+            //Log.Information("filename: {fileName}", file.FileName);
+
+            string blobName = parser.GetParameterValue("blobName");
+            string containerName = parser.GetParameterValue("containerName");
+
+            //string tempFileName = FileUtilities.SaveToTempFile(file.Data);
+            string tempFileName = FileUtilities.DownloadToTempFile(blobName, containerName);
+
             if (tempFileName == null)
             {
                 Log.Error("Can't save the file received in the request");
@@ -81,7 +87,7 @@ namespace ScanHttpServer
 
             var responseData = new
             {
-                FileName = file.FileName,
+                FileName = blobName,
                 isThreat = result.isThreat,
                 ThreatType = result.threatType
             };

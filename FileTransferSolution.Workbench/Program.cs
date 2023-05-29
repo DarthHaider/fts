@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
+using Azure.Storage.Blobs.Models;
 
 namespace FileTransferSolution.Workbench
 {
@@ -45,8 +46,18 @@ namespace FileTransferSolution.Workbench
                         {
                             if(uploadStream != null)
                             {
+                                BlobUploadOptions blobUploadOptions = new BlobUploadOptions
+                                {
+                                    TransferOptions = new StorageTransferOptions
+                                    {
+                                        InitialTransferSize = (4 * 1024 * 1024),
+                                        MaximumConcurrency = 20,
+                                        MaximumTransferSize = (4 * 1024 * 1024)
+                                    }
+                                };
+
                                 Console.WriteLine("Upload stream");
-                                await blockBlobClient.UploadAsync(uploadStream);
+                                await blockBlobClient.UploadAsync(uploadStream, blobUploadOptions);
                             }
                         }
                         bool uploadSuccessFul = await Task.FromResult(true);
