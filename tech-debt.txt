@@ -1,0 +1,2 @@
+Implement the upload functionality in a servce in blazor app
+move common appsettings to App Configuration to centralize the settings

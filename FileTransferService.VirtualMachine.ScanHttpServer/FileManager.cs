@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using Serilog;
 using Azure.Storage;
 using Azure.Storage.Blobs;
@@ -30,24 +31,30 @@ namespace ScanHttpServer
             }
         }
 
-        public static string DownloadToTempFile(string blobName, string blobContainer)
+        public static async Task<string> DownloadToTempFileAsync(string blobName, string blobContainer)
         {
+            Log.Information("In DownloadToTempFile function.");
+
             string tempFileName = Path.GetTempFileName();
             Log.Information("tmpFileName: {tempFileName}", tempFileName);
+
+            string baseStoragePath = "blob.core.usgovcloudapi.net";
+            string accountName = Environment.GetEnvironmentVariable("FtsStorageAccountName", EnvironmentVariableTarget.Machine);
+            Log.Information($"Account name: {accountName}");
+
+            string accountKey = Environment.GetEnvironmentVariable("FtsStorageAccountKey", EnvironmentVariableTarget.Machine);
+            Log.Information($"Account key: {accountKey}");
+
+            string path = $"https://{accountName}.{baseStoragePath}/{blobContainer}/{blobName}";
+            Log.Information($"path: {path}");
+
+            Uri blobUri = new Uri(path);
+
+
             try
             {
-                string baseStoragePath = "blob.core.usgovcloudapi.net";
-                string accountName = Environment.GetEnvironmentVariable("FtsStorageAccountName");
-                Console.WriteLine($"Account name: {accountName}");
 
-                string accountKey = Environment.GetEnvironmentVariable("FtsStorageAccountKey");
-                Console.WriteLine($"Account key: {accountKey}");
-
-                string path = $"https://{accountName}.{baseStoragePath}/{blobContainer}/{blobName}";
-
-                Uri blobUri = new Uri(path);
-
-                Console.WriteLine("Create BlobBlockCient");
+                Log.Information("Create BlobBlockCient");
                 StorageSharedKeyCredential credential = new StorageSharedKeyCredential(accountName, accountKey);
                 BlockBlobClient blockBlobClient = new BlockBlobClient(blobUri, credential);
 
@@ -55,10 +62,11 @@ namespace ScanHttpServer
                 //{
                 //    fileData.CopyTo(fileStream);
                 //}
-                using (var stream = blockBlobClient.OpenRead())
+                using (var stream = await blockBlobClient.OpenReadAsync())
                 {
                     FileStream fileStream = File.OpenWrite(tempFileName);
-                    stream.CopyTo(fileStream);
+                    await stream.CopyToAsync(fileStream);
+                    stream.Close();
                 }
                 Log.Information("File created Successfully");
 

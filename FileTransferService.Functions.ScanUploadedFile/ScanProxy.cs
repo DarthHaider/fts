@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 using System.Net.Http;
 using System.IO;
 using System.Net.Http.Headers;
@@ -30,16 +31,19 @@ namespace FileTransferService.Functions
             client = new HttpClient(handler);
         }
 
-        //public ScanResults Scan(Stream blob, string blobName)
-        public ScanResults Scan(string blobName, string containerName)
+        public ScanResults Scan(string fileName, string containerName)
         {
             string url = "https://" + hostIp + "/scan";
             log.LogInformation($"Scanner URL: {url}");
 
-            //var form = CreateMultiPartForm(blob, blobName);
-            var form = CreateMultiPartForm(blobName, containerName);
+            var form = CreateMultiPartForm(fileName, containerName);
+            log.LogInformation("After create multipart form");
+
             var response = client.PostAsync(url, form).Result;
+            log.LogInformation("After post resquest");
+
             string stringContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            log.LogInformation("After response");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -60,22 +64,51 @@ namespace FileTransferService.Functions
             return scanResults;
         }
 
-        //private static MultipartFormDataContent CreateMultiPartForm(Stream blob, string blobName)
+        public async Task<ScanResults> ScanAsync(string fileName, string containerName)
+        {
+            log.LogInformation("In ScanAsync");
+
+            string url = "https://" + hostIp + "/scan";
+            log.LogInformation($"Scanner URL: {url}");
+
+            var form = CreateMultiPartForm(fileName, containerName);
+            log.LogInformation("After create multipart form");
+
+            var response = await client.PostAsync(url, form);
+            log.LogInformation("After post resquest");
+
+            string stringContent = await response.Content.ReadAsStringAsync();
+            log.LogInformation("After response");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                log.LogError($"Request Failed, {response.StatusCode}:{stringContent}");
+                return null;
+            }
+
+            log.LogInformation($"Request Success Status Code:{response.StatusCode}");
+
+            var responseDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(stringContent);
+            var scanResults = new ScanResults();
+            scanResults.isThreat = Convert.ToBoolean(responseDictionary["isThreat"]);
+            scanResults.threatType = responseDictionary["ThreatType"];
+
+            log.LogInformation($"isThreat: {scanResults.isThreat.ToString()}");
+            log.LogInformation($"threatType: {scanResults.threatType}");
+
+            return scanResults;
+        }
         private static MultipartFormDataContent CreateMultiPartForm(string blobName, string containerName)
         {
             string boundry = GenerateRandomBoundry();
             MultipartFormDataContent form = new MultipartFormDataContent(boundry);
             
-            // var streamContent = new StreamContent(blob);
-            // var blobContent = new ByteArrayContent(streamContent.ReadAsByteArrayAsync().Result);
             var blobNameContent = new StringContent(blobName);
             var containerNameContent = new StringContent(containerName);
 
-            // blobContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
             blobNameContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
             containerNameContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
 
-            //form.Add(blobContent, "malware", blobName);
             form.Add(blobNameContent, "blobName");
             form.Add(containerNameContent, "containerName");            
             return form;

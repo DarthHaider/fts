@@ -10,10 +10,16 @@ if($args.Count -gt 0){
     if(-Not (Test-Path $ScanHttpServerFolder\vminit.config)){
         New-Item $ScanHttpServerFolder\vminit.config
     }
-    Set-Content $ScanHttpServerFolder\vminit.config $args[0]
+    Set-Content $ScanHttpServerFolder\vminit.config $args[2]
 
-    New-Item -Path Env:\FtsStorageAccountName -Value $args[1]
-    New-Item -Path Env:\FtsStorageAccountKey -Value $args[2]
+    $accountName = $args[0]
+    $accountName = $accountName.SubString(0, $accountName.Length - 1)
+    $accountKey = $args[1]
+    $accountKey = $accountKey.SubString(0, $accountKey.Length - 1)
+
+
+    [Environment]::SetEnvironmentVariable("FtsStorageAccountName", $accountName, "Machine")
+    [Environment]::SetEnvironmentVariable("FtsStorageAccountKey", $accountKey, "Machine")
 }
 
 $ScanHttpServerBinZipUrl = Get-Content $ScanHttpServerFolder\vminit.config

@@ -6,6 +6,7 @@
 @using Azure.Storage
 @using Azure.Storage.Blobs
 @using Azure.Storage.Blobs.Models
+@using System.Timers
 
 <PageTitle>File Transfer Service (FTS)</PageTitle>
 
@@ -16,11 +17,19 @@
         <label class="mb-1 text-secondary" for="uploadFileInput" id="uploadFileLabel">Select a file to upload <span style="color: crimson;">(Max size 1TB)</span>:</label>
         <InputFile class="form-control" @key="@(uploadFileInputKey)" id="uploadFileInput" OnChange="@OnFileSelectionChange"></InputFile>
     </div>
+
+    @if (isUploading)
+    {
+        <div class="progress mb-3">
+            <div class="progress-bar" style="width: @progressValue">@progressValue</div>
+        </div>
+    }
+
     <div class="mb-3 text-secondary">
         <span>Note: Ensure ingress files do not have file names containing CUI information.</span>
     </div>
     <div style="text-align:end">
-        <button class="btn btn-primary" id="uploadFileSubmitButton" type="submit" @onclick="@Upload" disabled="@(!isValid)">Upload</button>
+        <button class="btn btn-primary" id="uploadFileSubmitButton" type="submit" @onclick="@Upload" disabled="@(!isValid || isUploading)">Upload</button>
     </div>
 
     <div class="d-flex justify-content-around mt-5">
@@ -53,13 +62,23 @@
     private bool exceedsMaxFileSize = false;
 
     private bool isValid = false;
+    private bool isUploading = false;
+    private string progressValue = "0%";
+    private Timer DelayedHideProgressBarTimer = new Timer
+    {
+        Interval = 3000,
+        AutoReset = false,
+        Enabled = true
+    };
 
     private IBrowserFile? currentFile;
     public Guid uploadFileInputKey;
 
-    private string statusMessage = String.Empty;
-    private bool showProgressBar = false;
-    private string progressBar = String.Empty;
+
+    protected override void OnInitialized()
+    {
+        DelayedHideProgressBarTimer.Elapsed += OnDelayedHideProgressBar;
+    }
 
     private void OnFileSelectionChange(InputFileChangeEventArgs e)
     {
@@ -69,6 +88,19 @@
         {
             currentFile = e.File;
         }
+    }
+
+    private void OnProgressUpdated(Object sender,ProgressUpdatedEventArgs e)
+    {
+        Console.WriteLine($"New progress update: {e.FormattedStringValue}");
+        progressValue = e.FormattedStringValue;
+    }
+
+    private void OnDelayedHideProgressBar(Object sender, ElapsedEventArgs e)
+    {
+        isUploading = false;
+        StateHasChanged();
+        DelayedHideProgressBarTimer.Stop();
     }
 
     private async Task Upload()
@@ -91,6 +123,12 @@
                 AzureSasCredential sasCredentials = new AzureSasCredential(sasToken);
                 BlobClient blobClient = new BlobClient(azureBlobUri, sasCredentials, new BlobClientOptions());
 
+                UploadProgressHandler uploadProgressHandler = new UploadProgressHandler
+                {
+                    FileSize = currentFile.Size
+                };
+                uploadProgressHandler.ProgressUpdated += OnProgressUpdated;
+
                 BlobUploadOptions blobUploadOptions = new BlobUploadOptions
                 {
                     HttpHeaders = new BlobHttpHeaders
@@ -103,15 +141,15 @@
                         InitialTransferSize = 1024 * 1024,
                         MaximumConcurrency = 20,
                         MaximumTransferSize = 1024 * 1024
-                    }
+                    },
+                    ProgressHandler = uploadProgressHandler
                 };
 
+                isUploading = true;
                 await blobClient.UploadAsync(currentFile.OpenReadStream(maxFileSize), blobUploadOptions);
                 Reset();
 
             }
-
-
 
         }
         catch (Exception ex)
@@ -140,6 +178,9 @@
         currentFile = null;
         exceedsMaxFileSize = false;
         isValid = false;
+
+        DelayedHideProgressBarTimer.Start();
+        
     }
 
 }

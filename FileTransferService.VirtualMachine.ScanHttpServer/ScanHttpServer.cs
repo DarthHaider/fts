@@ -36,7 +36,7 @@ namespace ScanHttpServer
             switch (type)
             {
                 case requestType.SCAN:
-                    ScanRequest(request, response);
+                    await ScanRequest(request, response);
                     break;
                 default:
                     Log.Information("No valid request type");
@@ -45,7 +45,7 @@ namespace ScanHttpServer
             Log.Information("Done Handling Request {requestUrl}", request.Url);
         }
 
-        public static void ScanRequest(HttpListenerRequest request, HttpListenerResponse response)
+        public static async Task ScanRequest(HttpListenerRequest request, HttpListenerResponse response)
         {
             if (!request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase))
             {
@@ -55,14 +55,11 @@ namespace ScanHttpServer
 
             var scanner = new WindowsDefenderScanner();
             var parser = MultipartFormDataParser.Parse(request.InputStream);
-            //var file = parser.Files.First();
-            //Log.Information("filename: {fileName}", file.FileName);
 
             string blobName = parser.GetParameterValue("blobName");
             string containerName = parser.GetParameterValue("containerName");
 
-            //string tempFileName = FileUtilities.SaveToTempFile(file.Data);
-            string tempFileName = FileUtilities.DownloadToTempFile(blobName, containerName);
+            string tempFileName = await FileUtilities.DownloadToTempFileAsync(blobName, containerName);
 
             if (tempFileName == null)
             {
@@ -70,7 +67,7 @@ namespace ScanHttpServer
                 return;
             }
 
-            var result = scanner.Scan(tempFileName);
+            var result = await scanner.ScanAsync(tempFileName);
 
             if(result.isError)
             {
@@ -94,7 +91,8 @@ namespace ScanHttpServer
 
             SendResponse(response, HttpStatusCode.OK, responseData);
 
-            try{
+            try
+            {
                 File.Delete(tempFileName);
             }
             catch (Exception e)
