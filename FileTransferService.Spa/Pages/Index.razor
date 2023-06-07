@@ -15,7 +15,7 @@
 
     <div class="mb-3">
         <label class="mb-1 text-secondary" for="uploadFileInput" id="uploadFileLabel">Select a file to upload <span style="color: crimson;">(Max size 1TB)</span>:</label>
-        <InputFile class="form-control" @key="@(uploadFileInputKey)" id="uploadFileInput" OnChange="@OnFileSelectionChange" disabled="@(isUploading)></InputFile>
+        <InputFile class="form-control" @key="@(uploadFileInputKey)" id="uploadFileInput" OnChange="@OnFileSelectionChange" disabled="@(isUploading)"></InputFile>
     </div>
 
     @if (isUploading)
@@ -94,11 +94,13 @@
     {
         Console.WriteLine($"New progress update: {e.FormattedStringValue}");
         progressValue = e.FormattedStringValue;
+        StateHasChanged();
     }
 
     private void OnDelayedHideProgressBar(Object sender, ElapsedEventArgs e)
     {
         isUploading = false;
+        progressValue = "0%";
         StateHasChanged();
         DelayedHideProgressBarTimer.Stop();
     }
