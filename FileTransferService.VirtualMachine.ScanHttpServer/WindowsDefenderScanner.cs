@@ -9,21 +9,21 @@ namespace ScanHttpServer
 {
     public class WindowsDefenderScanner
     {
-        private const  string ScanningLineStart = "Scanning";
+        private const string ScanningLineStart = "Scanning";
         private const string ThreatTypeLineStart = "Threat";
         private const string ErrorLineStart = "CmdTool:";
         private const string OutputErrorLineStart = "ERROR";
         private static readonly string internalErrorMassage = "Internal Server Error";
         private static readonly string MoCmdRunPath = @"C:\Program Files\Windows Defender\MpCmdRun.exe";
-        public async Task<ScanResults> ScanAsync(string fileFullPath)
+        public ScanResults Scan(string fileFullPath)
         {
             Log.Information("Start Scanning {fileFullPath}", fileFullPath);
 
             string prefixArgs = @" -Scan -ScanType 3 -File ";
             string suffixArgs = " -DisableRemediation";
 
-            string scanProcessOutput = await RunScannerProcess(prefixArgs + fileFullPath + suffixArgs);
-            if(scanProcessOutput == null)
+            string scanProcessOutput = RunScannerProcess(prefixArgs + fileFullPath + suffixArgs).GetAwaiter().GetResult();
+            if (scanProcessOutput == null)
             {
                 return new ScanResults() { isError = true, errorMessage = internalErrorMassage };
             }
@@ -35,51 +35,26 @@ namespace ScanHttpServer
         private async Task<string> RunScannerProcess(string arguments)
         {
             Log.Information("command executed: \n{command}", MoCmdRunPath + arguments);
-            //var process = new Process();
-            //process.StartInfo.FileName = MoCmdRunPath;
-            //process.StartInfo.Arguments = arguments;
-            //process.StartInfo.UseShellExecute = false;
-            //process.StartInfo.RedirectStandardOutput = true;
-            //process.StartInfo.RedirectStandardError = true;
+            var process = new Process();
+            process.StartInfo.FileName = MoCmdRunPath;
+            process.StartInfo.Arguments = arguments;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
 
-            //try
-            //{
-            //    process.Start();
-            //    await process.WaitForExitAsync();
-            //    string proccesOutput = process.StandardOutput.ReadToEnd();
-            //    process.Dispose();
-
-            //    return proccesOutput;
-            //}
-            //catch (Exception e)
-            //{
-            //    Log.Error(e, "Exception caught when trying to start the scanner process.");
-            //    return null;
-            //}
-            string processOutput;
-            
-            using(Process process = new Process())
+            try
             {
-                process.StartInfo.FileName = MoCmdRunPath;
-                process.StartInfo.Arguments = arguments;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
+                process.Start();
+                await process.WaitForExitAsync();
+                string proccesOutput = process.StandardOutput.ReadToEnd();
 
-                try
-                {
-                    process.Start();
-                    await process.WaitForExitAsync();
-                    processOutput = process.StandardOutput.ReadToEnd();
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, "Exception caught when trying to start the scanner process.");
-                    return null;
-                }
+                return proccesOutput;
             }
-
-            return processOutput;
+            catch (Exception e)
+            {
+                Log.Error(e, "Exception caught when trying to start the scanner process.");
+                return null;
+            }
         }
 
         private ScanResults ParseScanOutput(string scanProcessOutput)
@@ -87,7 +62,7 @@ namespace ScanHttpServer
             Log.Information("Parsing scan output");
             string resultString = Regex.Replace(scanProcessOutput, @"^\s*$\n|\r", string.Empty, RegexOptions.Multiline).TrimEnd();
             var linesArray = resultString.Split(new[] { '\r', '\n' });
-            var result = new ScanResults() { isError=false };
+            var result = new ScanResults() { isError = false };
 
             foreach (string line in linesArray)
             {
@@ -125,7 +100,7 @@ namespace ScanHttpServer
                         result.isThreat = false;
                         return;
                     }
-                    
+
                 case ThreatTypeLineStart:
                     result.threatType = String.Join(' ', words.Skip(1));
                     return;

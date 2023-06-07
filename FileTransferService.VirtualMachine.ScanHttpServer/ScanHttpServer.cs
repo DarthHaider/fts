@@ -36,7 +36,7 @@ namespace ScanHttpServer
             switch (type)
             {
                 case requestType.SCAN:
-                    await ScanRequest(request, response);
+                    await ScanRequestAsync(request, response);
                     break;
                 default:
                     Log.Information("No valid request type");
@@ -45,7 +45,7 @@ namespace ScanHttpServer
             Log.Information("Done Handling Request {requestUrl}", request.Url);
         }
 
-        public static async Task ScanRequest(HttpListenerRequest request, HttpListenerResponse response)
+        public static async Task ScanRequestAsync(HttpListenerRequest request, HttpListenerResponse response)
         {
             if (!request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase))
             {
@@ -67,7 +67,7 @@ namespace ScanHttpServer
                 return;
             }
 
-            var result = await scanner.ScanAsync(tempFileName);
+            var result = scanner.Scan(tempFileName);
 
             if(result.isError)
             {

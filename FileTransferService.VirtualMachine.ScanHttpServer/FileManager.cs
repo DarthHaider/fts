@@ -58,16 +58,7 @@ namespace ScanHttpServer
                 StorageSharedKeyCredential credential = new StorageSharedKeyCredential(accountName, accountKey);
                 BlockBlobClient blockBlobClient = new BlockBlobClient(blobUri, credential);
 
-                //using (var fileStream = File.OpenWrite(tempFileName))
-                //{
-                //    fileData.CopyTo(fileStream);
-                //}
-                using (var stream = await blockBlobClient.OpenReadAsync())
-                {
-                    FileStream fileStream = File.OpenWrite(tempFileName);
-                    await stream.CopyToAsync(fileStream);
-                    stream.Close();
-                }
+                await blockBlobClient.DownloadToAsync(tempFileName);
                 Log.Information("File created Successfully");
 
                 return tempFileName;
