@@ -7,6 +7,7 @@ using System.Text;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace FileTransferService.Functions
 {
@@ -29,6 +30,7 @@ namespace FileTransferService.Functions
             this.hostIp = hostIp;
             this.log = log;
             client = new HttpClient(handler);
+            client.Timeout = Timeout.InfiniteTimeSpan;
         }
 
         public ScanResults Scan(string fileName, string containerName)
