@@ -29,7 +29,13 @@
         <span>Note: Ensure ingress files do not have file names containing CUI information.</span>
     </div>
     <div style="text-align:end">
-        <button class="btn btn-primary" id="uploadFileSubmitButton" type="submit" @onclick="@Upload" disabled="@(!isValid || isUploading)">Upload</button>
+        <button class="btn btn-primary" id="uploadFileSubmitButton" type="submit" @onclick="@Upload" disabled="@(!isValid || isUploading)">
+            @if (isUploading)
+            {
+                <span class="spinner-grow spinner-grow-sm"></span>
+            }
+            Upload
+        </button>
     </div>
 
     <div class="d-flex justify-content-around mt-5">
@@ -66,7 +72,7 @@
     private string progressValue = "0%";
     private Timer DelayedHideProgressBarTimer = new Timer
     {
-        Interval = 3000,
+        Interval = 2000,
         AutoReset = false,
         Enabled = true
     };
@@ -140,9 +146,9 @@
                     },
                     TransferOptions = new StorageTransferOptions
                     {
-                        InitialTransferSize = 1024 * 1024 * 50,
+                        InitialTransferSize = 1024 * 1024 * 90,
                         MaximumConcurrency = 20,
-                        MaximumTransferSize = 1024 * 1024 * 50
+                        MaximumTransferSize = 1024 * 1024 * 90
                     },
                     ProgressHandler = uploadProgressHandler
                 };
