@@ -10,8 +10,7 @@ namespace FileTransferService.Functions
         [FunctionName("OrchestrateRetreiveScannedFile")]
         public static async Task Run([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
-            string blobName = context.GetInput<string>();
-            
+            string blobName = context.GetInput<FileRetrievalInfo>().fileName;   
             await context.CallActivityAsync("ProcessCleanFile", blobName);
         }
     }

@@ -47,7 +47,8 @@ namespace FileTransferService.Functions
             AzureSasCredential credential = new AzureSasCredential(accountSas);
 
             BlobClient destClient = new BlobClient(destUri, credential);
-            await destClient.StartCopyFromUriAsync(srcUri);
+            CopyFromUriOperation copyFromUriOperation = await destClient.StartCopyFromUriAsync(srcUri);
+            copyFromUriOperation.WaitForCompletion();
 
             BlobClient srcClient = new BlobClient(srcUri, credential);
             await srcClient.DeleteAsync();

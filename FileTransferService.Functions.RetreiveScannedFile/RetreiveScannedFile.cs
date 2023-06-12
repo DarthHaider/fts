@@ -15,7 +15,8 @@ namespace FileTransferService.Functions
                         [DurableClient] IDurableOrchestrationClient orchestrationClient,
                         ILogger log)
         {
-            await orchestrationClient.StartNewAsync("OrchestrateRetreiveScannedFile", name);
+            FileRetrievalInfo fileRetrievalInfo = new FileRetrievalInfo {fileName = name};
+            await orchestrationClient.StartNewAsync("OrchestrateRetreiveScannedFile", fileRetrievalInfo);
         }
     }
 }
